@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Diagnostic script to verify the Company Insight Chat UI setup.
 Run this to check your configuration before launching the app.
