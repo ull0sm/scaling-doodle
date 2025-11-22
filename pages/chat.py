@@ -14,14 +14,17 @@ load_dotenv()
 
 # Configuration
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
-REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "30"))
+try:
+    REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "30"))
+except (ValueError, TypeError):
+    REQUEST_TIMEOUT = 30
 
 # Page config
 st.set_page_config(
     page_title="Chat with Sam",
     page_icon="💬",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # Dark theme styling
@@ -162,7 +165,9 @@ def call_n8n_webhook(message: str) -> str:
             if reply:
                 return reply
             else:
-                return "⚠️ No reply field found in n8n response."
+                # Log available fields for debugging
+                available_fields = list(data.keys()) if isinstance(data, dict) else []
+                return f"⚠️ No reply field found in n8n response. Available fields: {available_fields}"
         else:
             return f"⚠️ n8n webhook returned status code {response.status_code}"
             
