@@ -364,11 +364,9 @@ def main():
         send_button = st.button("Send", use_container_width=True)
     
     # Handle message submission
-    if send_button or (user_input and user_input != st.session_state.get("last_input", "")):
-        if user_input:
-            st.session_state.last_input = user_input
-            send_message(supabase, user_input)
-            st.rerun()
+    if send_button and user_input:
+        send_message(supabase, user_input)
+        st.rerun()
 
 
 if __name__ == "__main__":

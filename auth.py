@@ -1,7 +1,6 @@
 """
 Authentication module for Supabase Google OAuth.
 """
-import streamlit as st
 from supabase import create_client, Client
 from typing import Optional, Dict, Any
 
@@ -11,14 +10,24 @@ def init_supabase(url: str, key: str) -> Client:
     return create_client(url, key)
 
 
-def get_auth_url(supabase: Client) -> str:
-    """Get Google OAuth URL from Supabase."""
+def initiate_google_oauth(supabase: Client, redirect_to: str = "http://localhost:8501"):
+    """
+    Initiate Google OAuth flow with Supabase.
+    Note: This requires Google OAuth to be configured in Supabase dashboard.
+    
+    Args:
+        supabase: Supabase client instance
+        redirect_to: URL to redirect after authentication
+        
+    Returns:
+        OAuth response object from Supabase
+    """
     # Supabase handles OAuth redirect automatically
     # The user needs to configure Google OAuth in Supabase dashboard
     return supabase.auth.sign_in_with_oauth({
         "provider": "google",
         "options": {
-            "redirect_to": st.get_option("browser.serverAddress") or "http://localhost:8501"
+            "redirect_to": redirect_to
         }
     })
 

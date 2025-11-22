@@ -64,7 +64,7 @@ def call_n8n_webhook(
             elif "text" in data:
                 return {"reply": data["text"], "success": True}
             else:
-                print(f"Unexpected response format: {data}")
+                print(f"Unexpected response format - missing 'reply', 'output', or 'text' fields")
                 return {
                     "reply": "I cannot find this in the available resources.",
                     "success": False,
