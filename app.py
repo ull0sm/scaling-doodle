@@ -300,8 +300,38 @@ def main():
         """)
         
         if st.button("🔐 Sign in with Google", use_container_width=True):
-            st.warning("Please configure Google OAuth in your Supabase dashboard first.")
-            st.info("After configuration, Supabase will handle the OAuth flow automatically.")
+            from auth import initiate_google_oauth
+            try:
+                oauth_res = initiate_google_oauth(supabase, redirect_to="http://localhost:8501")
+            except Exception as e:
+                st.error(f"OAuth initiation error: {e}")
+                st.caption("Ensure Google provider is enabled with correct Client ID & Secret in Supabase.")
+                oauth_res = None
+
+            # Attempt to extract URL
+            auth_url = None
+            if isinstance(oauth_res, dict):
+                auth_url = oauth_res.get("url") or oauth_res.get("data", {}).get("url")
+            else:
+                auth_url = getattr(oauth_res, "url", None) if oauth_res else None
+
+            # Fallback manual construction
+            if not auth_url and SUPABASE_URL:
+                auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=http://localhost:8501"
+
+            if auth_url:
+                st.write("Auth URL:", auth_url)  # debug visibility
+                # JS redirect, meta refresh, and clickable link fallback
+                redirect_block = f"""
+                <script>window.location.replace('{auth_url}');</script>
+                <meta http-equiv="refresh" content="0; url={auth_url}" />
+                <p>If you are not redirected automatically, <a href="{auth_url}" target="_self">click here to continue with Google Sign-In</a>.</p>
+                """
+                st.markdown(redirect_block, unsafe_allow_html=True)
+                st.info("Redirecting to Google for sign-in...")
+            else:
+                st.error("Could not obtain Google OAuth URL. Verify Google provider configuration in Supabase.")
+                st.caption("Check Authentication > Providers > Google and ensure Client ID & Secret are saved.")
         
         st.stop()
     
