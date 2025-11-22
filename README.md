@@ -2,6 +2,8 @@
 
 A minimal dark-mode Streamlit frontend for an n8n LangChain-based company insight & career guidance chatbot named "Sam". This application provides authentication via Supabase, persistent chat sessions, and seamless integration with your existing n8n workflow.
 
+> **🚀 New here?** Check out [QUICKSTART.md](QUICKSTART.md) for a 5-minute setup guide!
+
 ## 🎯 Features
 
 - **Dark Theme UI**: Clean, professional dark interface inspired by modern chat applications
@@ -82,7 +84,22 @@ REQUEST_TIMEOUT=30
 - **SUPABASE_KEY**: Supabase Project Settings > API > Project API keys > `anon` `public` key
 - **N8N_WEBHOOK_URL**: See the n8n webhook configuration section below
 
-### 5. Run the Application
+### 5. Verify Your Setup (Optional but Recommended)
+
+Run the diagnostic tool to check your configuration:
+
+```bash
+python3 diagnose.py
+```
+
+This will verify:
+- ✓ Python version and dependencies
+- ✓ All required files present
+- ✓ Environment variables configured
+- ✓ Supabase connection working
+- ✓ n8n webhook responding
+
+### 6. Run the Application
 
 ```bash
 streamlit run app.py
@@ -192,7 +209,13 @@ Your current workflow only uses the `message` field (automatically extracted by 
 
 ### Testing Your Webhook
 
-Test your webhook directly using curl:
+You can test your webhook using the diagnostic tool:
+
+```bash
+python3 diagnose.py
+```
+
+Or test it directly using curl:
 
 ```bash
 curl -X POST https://your-n8n-instance.com/webhook/5f1c0c82-0ff9-40c7-9e2e-b1a96ffe24cd \
