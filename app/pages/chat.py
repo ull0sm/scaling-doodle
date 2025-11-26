@@ -31,19 +31,29 @@ with st.sidebar:
     if "editing_session_id" not in st.session_state:
         st.session_state.editing_session_id = None
 
+    def save_rename(session_id):
+        new_title = st.session_state[f"input_{session_id}"]
+        if new_title:
+            update_session_title(session_id, new_title)
+        st.session_state.editing_session_id = None
+        # No need to rerun here, on_change handles the value update, and the loop will re-render with new title next run
+        # But to show the change immediately, we might need a rerun or just let Streamlit handle it.
+        # Actually, on_change runs BEFORE the script rerun. So the next rerun will have the updated data.
+
     for session in sessions:
-        # Layout: [Session Name/Input] [Edit] [Delete]
-        col1, col2, col3 = st.columns([0.7, 0.15, 0.15])
+        col1, col2 = st.columns([0.85, 0.15])
         
         with col1:
             if st.session_state.editing_session_id == session["id"]:
-                # Edit Mode: Show Text Input
-                new_title = st.text_input("Rename", value=session.get("title", "Untitled Chat"), key=f"input_{session['id']}", label_visibility="collapsed")
-                if new_title != session.get("title", "Untitled Chat"):
-                    if st.button("💾", key=f"save_{session['id']}", help="Save Name"):
-                        update_session_title(session["id"], new_title)
-                        st.session_state.editing_session_id = None
-                        st.rerun()
+                # Edit Mode: Show Text Input with auto-save on blur/enter
+                st.text_input(
+                    "Rename", 
+                    value=session.get("title", "Untitled Chat"), 
+                    key=f"input_{session['id']}", 
+                    label_visibility="collapsed",
+                    on_change=save_rename,
+                    args=(session["id"],)
+                )
             else:
                 # Normal Mode: Show Session Button
                 if st.button(session.get("title", "Untitled Chat"), key=f"btn_{session['id']}", use_container_width=True):
@@ -51,21 +61,17 @@ with st.sidebar:
                     st.rerun()
         
         with col2:
-            if st.session_state.editing_session_id == session["id"]:
-                 if st.button("❌", key=f"cancel_{session['id']}", help="Cancel"):
-                    st.session_state.editing_session_id = None
-                    st.rerun()
-            else:
-                if st.button("✏️", key=f"edit_{session['id']}", help="Rename Chat"):
+            # Three-dot menu
+            with st.popover("⋮", use_container_width=True):
+                if st.button("✏️ Rename", key=f"edit_{session['id']}", use_container_width=True):
                     st.session_state.editing_session_id = session["id"]
                     st.rerun()
-
-        with col3:
-             if st.button("🗑️", key=f"del_{session['id']}", help="Delete Chat"):
-                if delete_session(session["id"]):
-                    if st.session_state.current_session_id == session["id"]:
-                        st.session_state.current_session_id = None
-                    st.rerun()
+                
+                if st.button("🗑️ Delete", key=f"del_{session['id']}", use_container_width=True):
+                    if delete_session(session["id"]):
+                        if st.session_state.current_session_id == session["id"]:
+                            st.session_state.current_session_id = None
+                        st.rerun()
 
 # Main Chat Area
 if not st.session_state.current_session_id:

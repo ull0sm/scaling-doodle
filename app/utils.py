@@ -33,10 +33,17 @@ def load_css():
             color: var(--text-color) !important;
         }
 
-        /* Hide Streamlit Branding */
+        /* Hide Streamlit Branding but keep Sidebar Toggle */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
-        header {visibility: hidden;}
+        header {
+            visibility: visible !important;
+            background-color: transparent !important;
+        }
+        [data-testid="stHeader"] {
+            background-color: transparent !important;
+            z-index: 1;
+        }
         
         /* Chat Input Styling */
         .stChatInputContainer {
@@ -91,40 +98,41 @@ def load_css():
         /* Sidebar Buttons (Session List) */
         [data-testid="stSidebar"] .stButton button {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: none; /* Remove border for cleaner look */
             text-align: left;
             justify-content: flex-start;
-            padding-left: 1rem;
+            padding-left: 0.5rem;
             font-weight: 400;
             color: #cbd5e1;
+            transition: background-color 0.2s, color 0.2s;
         }
 
         [data-testid="stSidebar"] .stButton button:hover {
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: none;
-            box-shadow: none;
             color: white;
         }
 
         [data-testid="stSidebar"] .stButton button:focus {
-            border-color: #818cf8;
             color: #818cf8;
         }
 
         /* Sidebar Column Spacing */
         [data-testid="stSidebar"] [data-testid="column"] {
-            padding-left: 0.25rem !important;
-            padding-right: 0.25rem !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            gap: 0 !important;
         }
 
         /* Compact Action Buttons (Edit/Delete) */
         [data-testid="stSidebar"] [data-testid="column"]:nth-child(2) button,
         [data-testid="stSidebar"] [data-testid="column"]:nth-child(3) button {
-            padding: 0.25rem 0.5rem;
+            padding: 0px 4px !important; /* Minimal padding */
             border: none;
             background: transparent;
-            color: #94a3b8;
+            color: #64748b; /* Muted color */
+            min-height: auto;
+            height: 36px; /* Match row height */
+            line-height: 1;
         }
 
         [data-testid="stSidebar"] [data-testid="column"]:nth-child(2) button:hover,
