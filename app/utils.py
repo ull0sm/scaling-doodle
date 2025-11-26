@@ -8,7 +8,6 @@ load_dotenv()
 def load_css():
     """
     Injects custom CSS for a premium, 'Slate Minimal' professional feel.
-    Fixes visibility issues by forcing colors and removing fragile selectors.
     """
     st.markdown("""
         <style>
@@ -73,7 +72,104 @@ def load_css():
         .stSpinner > div {
             border-top-color: #334155 !important;
         }
+
+        /* Buttons */
+        .stButton button {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .stButton button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        /* Sidebar Buttons (Session List) */
+        [data-testid="stSidebar"] .stButton button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+            justify-content: flex-start;
+            padding-left: 1rem;
+            font-weight: 400;
+            color: #cbd5e1;
+        }
+
+        [data-testid="stSidebar"] .stButton button:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: none;
+            box-shadow: none;
+            color: white;
+        }
+
+        [data-testid="stSidebar"] .stButton button:focus {
+            border-color: #818cf8;
+            color: #818cf8;
+        }
+
+        /* Sidebar Column Spacing */
+        [data-testid="stSidebar"] [data-testid="column"] {
+            padding-left: 0.25rem !important;
+            padding-right: 0.25rem !important;
+        }
+
+        /* Compact Action Buttons (Edit/Delete) */
+        [data-testid="stSidebar"] [data-testid="column"]:nth-child(2) button,
+        [data-testid="stSidebar"] [data-testid="column"]:nth-child(3) button {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+        }
+
+        [data-testid="stSidebar"] [data-testid="column"]:nth-child(2) button:hover,
+        [data-testid="stSidebar"] [data-testid="column"]:nth-child(3) button:hover {
+            color: #f8fafc;
+            background: rgba(255, 255, 255, 0.1);
+        }
         
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 8px;
+            background-color: rgba(30, 41, 59, 0.5);
+            padding: 4px;
+            border-radius: 8px;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            border-radius: 6px;
+            color: #94a3b8;
+        }
+
+        .stTabs [aria-selected="true"] {
+            background-color: rgba(79, 70, 229, 0.2);
+            color: #818cf8;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            /* Increase touch targets for sidebar buttons */
+            [data-testid="stSidebar"] [data-testid="column"] button {
+                padding: 0.5rem 0.75rem !important; /* Larger padding */
+                min-height: 44px; /* Minimum touch target size */
+            }
+            
+            /* Stack sidebar columns if needed, or just give them more breathing room */
+            [data-testid="stSidebar"] [data-testid="column"] {
+                margin-bottom: 0.25rem;
+            }
+
+            /* Adjust main chat padding */
+            .stChatMessage {
+                padding: 1rem;
+            }
+        }
         </style>
     """, unsafe_allow_html=True)
 
