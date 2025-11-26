@@ -1,0 +1,131 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Outfit:wght@500;700&display=swap');
+
+/* Global Styles */
+.stApp {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    font-family: 'Inter', sans-serif;
+    color: #e2e8f0;
+}
+
+h1, h2, h3 {
+    font-family: 'Outfit', sans-serif;
+    color: #f8fafc;
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+    background-color: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-testid="stSidebar"] h1 {
+    font-size: 1.5rem;
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+/* Chat Messages */
+.stChatMessage {
+    background-color: transparent;
+}
+
+[data-testid="stChatMessageContent"] {
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* User Message */
+[data-testid="stChatMessage"]:nth-child(odd) [data-testid="stChatMessageContent"] {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Assistant Message */
+[data-testid="stChatMessage"]:nth-child(even) [data-testid="stChatMessageContent"] {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+/* Chat Input */
+.stChatInputContainer {
+    padding-bottom: 1rem;
+}
+
+[data-testid="stChatInput"] {
+    background-color: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    color: white;
+}
+
+[data-testid="stChatInput"]:focus-within {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+/* Buttons */
+/* Buttons */
+.stButton button {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.stButton button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* Sidebar Buttons (Session List) */
+[data-testid="stSidebar"] .stButton button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+    justify-content: flex-start;
+    padding-left: 1rem;
+    font-weight: 400;
+    color: #cbd5e1;
+}
+
+[data-testid="stSidebar"] .stButton button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: none;
+    box-shadow: none;
+    color: white;
+}
+
+[data-testid="stSidebar"] .stButton button:focus {
+    border-color: #818cf8;
+    color: #818cf8;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+    background-color: rgba(30, 41, 59, 0.5);
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 40px;
+    border-radius: 6px;
+    color: #94a3b8;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: #818cf8;
+}
