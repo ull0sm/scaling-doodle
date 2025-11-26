@@ -114,24 +114,43 @@ if prompt := st.chat_input("Ask me about company roles, salaries, or interview t
     # Smart Session Naming: Rename if it's the first interaction
     # If we have exactly 2 messages (1 user, 1 assistant), it's time to name the session
     try:
-        if len(messages) == 0: # messages list is loaded at start, so it doesn't include the 2 just added
-             # Wait, messages is loaded at line 47. We just added 2 messages.
-             # We should re-fetch or just check if the current title is "New Chat"
-             pass
-        
-        # Let's just check the title directly from DB or session list
+        # Check if we need to rename (only if title is default)
         current_title = "New Chat"
         for s in sessions:
             if s["id"] == st.session_state.current_session_id:
                 current_title = s.get("title", "New Chat")
                 break
         
-        if current_title == "New Chat" or current_title == "Untitled Chat":
-            # Generate title from prompt
-            new_title = prompt[:30] + "..." if len(prompt) > 30 else prompt
+        # We only rename if it's still the default title and we have just completed the first exchange
+        # (messages list was loaded before this turn, so it was empty, now we added 2 messages)
+        if (current_title == "New Chat" or current_title == "Untitled Chat") and len(messages) == 0:
+            # Generate title from prompt and response
+            import uuid
+            naming_prompt = (
+                f"Generate a very short, concise title (max 5 words) for a chat session that starts with this exchange:\n"
+                f"User: {prompt}\n"
+                f"AI: {response_text}\n"
+                f"Return ONLY the title, no quotes or extra text."
+            )
+            
+            # Use a temporary session ID to avoid polluting the main chat context
+            temp_session_id = f"naming-{uuid.uuid4()}"
+            
+            # Call AI for title
+            generated_title = invoke_n8n_webhook(naming_prompt, temp_session_id)
+            
+            # Clean up title (remove quotes if any, trim)
+            new_title = generated_title.strip().strip('"').strip("'")
+            
+            # Fallback if AI fails or returns something too long/empty
+            if not new_title or len(new_title) > 50 or "Error" in new_title:
+                 new_title = prompt[:30] + "..." if len(prompt) > 30 else prompt
+
             update_session_title(st.session_state.current_session_id, new_title)
             st.rerun()
-    except Exception:
+    except Exception as e:
+        # Silently fail to simple naming or just keep existing
+        print(f"Smart naming failed: {e}")
         pass
 
     # Rerun to update history
