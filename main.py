@@ -10,15 +10,20 @@ load_dotenv()
 # Page Configuration
 st.set_page_config(page_title="Sam - AI Assistant", page_icon="🤖", layout="centered")
 
-from app.auth import sign_in, sign_up, sign_out, get_profile, update_profile
+from app.auth import sign_in, sign_up, sign_out, get_profile, update_profile, restore_session
 
 # Initialize session state for authentication
+if "session" not in st.session_state:
+    st.session_state["session"] = None
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "user" not in st.session_state:
     st.session_state.user = None
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
+
+# Restore session on every rerun
+restore_session()
 
 def login_page_func():
     st.title("Welcome Back")
@@ -95,9 +100,6 @@ if st.session_state.authenticated:
         st.write(f"Hi, {display_name}!")
         if st.button("Sign Out"):
             sign_out()
-            st.session_state.authenticated = False
-            st.session_state.user = None
-            st.session_state.access_token = None
             st.rerun()
             
     pg = st.navigation([chat_page])

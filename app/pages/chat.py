@@ -2,6 +2,12 @@ import streamlit as st
 from app.utils import load_css, invoke_n8n_webhook
 from app.auth import get_user_sessions, create_session, get_session_messages, save_message, update_session_title, delete_session
 
+# Authentication check - ensure user is logged in
+if "session" not in st.session_state or st.session_state["session"] is None:
+    st.warning("⚠️ You must be logged in to access the chat.")
+    st.info("Please return to the main page to log in.")
+    st.stop()
+
 # Load Custom CSS
 load_css()
 
