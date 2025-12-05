@@ -39,8 +39,7 @@ def login_page_func():
             if submitted:
                 response = sign_in(email, password)
                 if hasattr(response, "user") and response.user and response.session:
-                    # Session is already stored by sign_in(), just restore it to set auth state
-                    restore_session()
+                    # Session and auth state are already set by sign_in()
                     st.rerun()
                 elif isinstance(response, dict) and "error" in response:
                     st.error(response["error"])
@@ -57,8 +56,7 @@ def login_page_func():
                 response = sign_up(new_email, new_password)
                 if hasattr(response, "user") and response.user:
                     if response.session:
-                        # Session is already stored by sign_up(), just restore it to set auth state
-                        restore_session()
+                        # Session and auth state are already set by sign_up()
                         st.rerun()
                     else:
                         st.success("Sign up successful! Please check your email to confirm your account, then sign in.")

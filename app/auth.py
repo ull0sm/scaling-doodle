@@ -103,6 +103,10 @@ def sign_in(email, password):
                 "refresh_token": response.session.refresh_token,
                 "user": response.user
             }
+            # Also set the auxiliary state variables for immediate use
+            st.session_state.authenticated = True
+            st.session_state.user = response.user
+            st.session_state.access_token = response.session.access_token
         return response
     except Exception as e:
         return {"error": str(e)}
@@ -118,6 +122,10 @@ def sign_up(email, password):
                 "refresh_token": response.session.refresh_token,
                 "user": response.user
             }
+            # Also set the auxiliary state variables for immediate use
+            st.session_state.authenticated = True
+            st.session_state.user = response.user
+            st.session_state.access_token = response.session.access_token
         return response
     except Exception as e:
         return {"error": str(e)}
