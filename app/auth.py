@@ -79,8 +79,15 @@ def require_authentication():
     """
     Reusable authentication check that can be called at the top of any protected page.
     Stops execution and shows a warning if the user is not logged in.
+    
+    This function first attempts to restore the session, then checks if the user
+    is authenticated. This ensures the session is properly validated before allowing access.
     """
-    if "session" not in st.session_state or st.session_state["session"] is None:
+    # First, try to restore any existing session
+    restore_session()
+    
+    # Then check if the user is authenticated
+    if not st.session_state.get("authenticated", False):
         st.warning("⚠️ You must be logged in to access this page.")
         st.info("Please return to the main page to log in.")
         st.stop()

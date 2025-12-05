@@ -39,9 +39,8 @@ def login_page_func():
             if submitted:
                 response = sign_in(email, password)
                 if hasattr(response, "user") and response.user and response.session:
-                    st.session_state.authenticated = True
-                    st.session_state.user = response.user
-                    st.session_state.access_token = response.session.access_token
+                    # Session is already stored by sign_in(), just restore it to set auth state
+                    restore_session()
                     st.rerun()
                 elif isinstance(response, dict) and "error" in response:
                     st.error(response["error"])
@@ -58,10 +57,8 @@ def login_page_func():
                 response = sign_up(new_email, new_password)
                 if hasattr(response, "user") and response.user:
                     if response.session:
-                        # Auto-login if session is returned (email confirmation disabled)
-                        st.session_state.authenticated = True
-                        st.session_state.user = response.user
-                        st.session_state.access_token = response.session.access_token
+                        # Session is already stored by sign_up(), just restore it to set auth state
+                        restore_session()
                         st.rerun()
                     else:
                         st.success("Sign up successful! Please check your email to confirm your account, then sign in.")
