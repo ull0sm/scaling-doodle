@@ -10,15 +10,20 @@ load_dotenv()
 # Page Configuration
 st.set_page_config(page_title="Sam - AI Assistant", page_icon="🤖", layout="centered")
 
-from app.auth import sign_in, sign_up, sign_out, get_profile, update_profile
+from app.auth import sign_in, sign_up, sign_out, get_profile, update_profile, restore_session
 
 # Initialize session state for authentication
+if "session" not in st.session_state:
+    st.session_state["session"] = None
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 if "user" not in st.session_state:
     st.session_state.user = None
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
+
+# Restore session on every rerun
+restore_session()
 
 def login_page_func():
     st.title("Welcome Back")
@@ -34,9 +39,7 @@ def login_page_func():
             if submitted:
                 response = sign_in(email, password)
                 if hasattr(response, "user") and response.user and response.session:
-                    st.session_state.authenticated = True
-                    st.session_state.user = response.user
-                    st.session_state.access_token = response.session.access_token
+                    # Session and auth state are already set by sign_in()
                     st.rerun()
                 elif isinstance(response, dict) and "error" in response:
                     st.error(response["error"])
@@ -53,10 +56,7 @@ def login_page_func():
                 response = sign_up(new_email, new_password)
                 if hasattr(response, "user") and response.user:
                     if response.session:
-                        # Auto-login if session is returned (email confirmation disabled)
-                        st.session_state.authenticated = True
-                        st.session_state.user = response.user
-                        st.session_state.access_token = response.session.access_token
+                        # Session and auth state are already set by sign_up()
                         st.rerun()
                     else:
                         st.success("Sign up successful! Please check your email to confirm your account, then sign in.")
@@ -95,9 +95,6 @@ if st.session_state.authenticated:
         st.write(f"Hi, {display_name}!")
         if st.button("Sign Out"):
             sign_out()
-            st.session_state.authenticated = False
-            st.session_state.user = None
-            st.session_state.access_token = None
             st.rerun()
             
     pg = st.navigation([chat_page])

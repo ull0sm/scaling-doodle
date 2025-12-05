@@ -17,10 +17,96 @@ def init_supabase(access_token: str = None) -> Client:
         
     return client
 
+def restore_session():
+    """
+    Restores the authentication state from st.session_state["session"].
+    Refreshes the session if needed to keep it alive.
+    Returns True if a valid session exists, False otherwise.
+    
+    Note: This function uses supabase.auth.refresh_session() which is available
+    in supabase-py >= 2.0. The refresh_session method extends the session lifetime
+    by using the refresh_token to obtain new access tokens.
+    """
+    if "session" not in st.session_state or st.session_state["session"] is None:
+        return False
+    
+    try:
+        supabase = init_supabase()
+        session_data = st.session_state["session"]
+        
+        # Try to refresh the session to ensure it's still valid
+        refresh_token = session_data.get("refresh_token")
+        if refresh_token:
+            try:
+                # Use refresh_session to extend session lifetime (requires supabase-py >= 2.0)
+                response = supabase.auth.refresh_session(refresh_token)
+                if response and response.session:
+                    # Update session with refreshed tokens
+                    st.session_state["session"] = {
+                        "access_token": response.session.access_token,
+                        "refresh_token": response.session.refresh_token,
+                        "user": response.user
+                    }
+                    st.session_state.authenticated = True
+                    st.session_state.user = response.user
+                    st.session_state.access_token = response.session.access_token
+                    return True
+            except Exception as e:
+                # Session refresh failed, clear the session
+                st.session_state["session"] = None
+                st.session_state.authenticated = False
+                st.session_state.user = None
+                st.session_state.access_token = None
+                return False
+        
+        # If no refresh token, validate the access token is present
+        if session_data.get("access_token") and session_data.get("user"):
+            st.session_state.authenticated = True
+            st.session_state.user = session_data["user"]
+            st.session_state.access_token = session_data["access_token"]
+            return True
+        
+    except Exception as e:
+        st.session_state["session"] = None
+        st.session_state.authenticated = False
+        st.session_state.user = None
+        st.session_state.access_token = None
+        return False
+    
+    return False
+
+def require_authentication():
+    """
+    Reusable authentication check that can be called at the top of any protected page.
+    Stops execution and shows a warning if the user is not logged in.
+    
+    This function first attempts to restore the session, then checks if the user
+    is authenticated. This ensures the session is properly validated before allowing access.
+    """
+    # First, try to restore any existing session
+    restore_session()
+    
+    # Then check if the user is authenticated
+    if not st.session_state.get("authenticated", False):
+        st.warning("⚠️ You must be logged in to access this page.")
+        st.info("Please return to the main page to log in.")
+        st.stop()
+
 def sign_in(email, password):
     supabase = init_supabase()
     try:
         response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        if hasattr(response, "session") and response.session:
+            # Store session in st.session_state for persistence
+            st.session_state["session"] = {
+                "access_token": response.session.access_token,
+                "refresh_token": response.session.refresh_token,
+                "user": response.user
+            }
+            # Also set the auxiliary state variables for immediate use
+            st.session_state.authenticated = True
+            st.session_state.user = response.user
+            st.session_state.access_token = response.session.access_token
         return response
     except Exception as e:
         return {"error": str(e)}
@@ -29,6 +115,17 @@ def sign_up(email, password):
     supabase = init_supabase()
     try:
         response = supabase.auth.sign_up({"email": email, "password": password})
+        if hasattr(response, "session") and response.session:
+            # Store session in st.session_state for persistence
+            st.session_state["session"] = {
+                "access_token": response.session.access_token,
+                "refresh_token": response.session.refresh_token,
+                "user": response.user
+            }
+            # Also set the auxiliary state variables for immediate use
+            st.session_state.authenticated = True
+            st.session_state.user = response.user
+            st.session_state.access_token = response.session.access_token
         return response
     except Exception as e:
         return {"error": str(e)}
@@ -39,6 +136,12 @@ def sign_out():
         supabase.auth.sign_out()
     except Exception as e:
         pass # Ignore errors on logout
+    finally:
+        # Always clear the session state
+        st.session_state["session"] = None
+        st.session_state.authenticated = False
+        st.session_state.user = None
+        st.session_state.access_token = None
 
 def get_user_sessions():
     token = st.session_state.get("access_token")
