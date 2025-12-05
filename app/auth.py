@@ -22,6 +22,10 @@ def restore_session():
     Restores the authentication state from st.session_state["session"].
     Refreshes the session if needed to keep it alive.
     Returns True if a valid session exists, False otherwise.
+    
+    Note: This function uses supabase.auth.refresh_session() which is available
+    in supabase-py >= 2.0. The refresh_session method extends the session lifetime
+    by using the refresh_token to obtain new access tokens.
     """
     if "session" not in st.session_state or st.session_state["session"] is None:
         return False
@@ -34,6 +38,7 @@ def restore_session():
         refresh_token = session_data.get("refresh_token")
         if refresh_token:
             try:
+                # Use refresh_session to extend session lifetime (requires supabase-py >= 2.0)
                 response = supabase.auth.refresh_session(refresh_token)
                 if response and response.session:
                     # Update session with refreshed tokens
@@ -69,6 +74,16 @@ def restore_session():
         return False
     
     return False
+
+def require_authentication():
+    """
+    Reusable authentication check that can be called at the top of any protected page.
+    Stops execution and shows a warning if the user is not logged in.
+    """
+    if "session" not in st.session_state or st.session_state["session"] is None:
+        st.warning("⚠️ You must be logged in to access this page.")
+        st.info("Please return to the main page to log in.")
+        st.stop()
 
 def sign_in(email, password):
     supabase = init_supabase()
