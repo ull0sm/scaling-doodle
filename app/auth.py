@@ -42,9 +42,10 @@ def restore_session(cookie_manager=None):
             if supabase_token:
                 # We have a token in cookies, validate it with Supabase
                 try:
-                    supabase = init_supabase()
-                    # Get user info using the token
-                    response = supabase.auth.get_user(supabase_token)
+                    # Initialize Supabase client with the token to validate it
+                    supabase = init_supabase(supabase_token)
+                    # Get user info using the authenticated client
+                    response = supabase.auth.get_user()
                     
                     if response and response.user:
                         # Token is valid, restore session
@@ -130,8 +131,15 @@ def require_authentication():
     This function first attempts to restore the session, then checks if the user
     is authenticated. This ensures the session is properly validated before allowing access.
     """
+    # Initialize cookie manager for this page if needed
+    try:
+        import extra_streamlit_components as stx
+        cookie_manager = stx.CookieManager()
+    except:
+        cookie_manager = None
+    
     # First, try to restore any existing session
-    restore_session()
+    restore_session(cookie_manager)
     
     # Then check if the user is authenticated
     if not st.session_state.get("authenticated", False):
