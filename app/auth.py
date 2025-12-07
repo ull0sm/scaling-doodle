@@ -18,6 +18,27 @@ def init_supabase(access_token: str = None) -> Client:
         
     return client
 
+def _save_token_to_cookie(cookie_manager, access_token):
+    """
+    Helper function to save access token to browser cookies.
+    
+    Args:
+        cookie_manager: CookieManager instance
+        access_token: The access token to save
+    
+    Note: We only store the access_token in cookies, not the refresh_token.
+    This is a security tradeoff - refresh tokens are more sensitive and storing
+    them in browser cookies increases the risk of token theft. Users will need
+    to re-authenticate when the access token expires (typically 1 hour), which
+    is acceptable for this use case.
+    """
+    if cookie_manager is not None:
+        try:
+            cookie_manager.set("supabase_token", access_token, expires_at=datetime.now() + timedelta(days=7))
+        except Exception:
+            # Cookie save failed, but authentication still succeeded
+            pass
+
 def restore_session(cookie_manager=None):
     """
     Restores the authentication state from browser cookies or st.session_state["session"].
@@ -92,11 +113,7 @@ def restore_session(cookie_manager=None):
                     st.session_state.access_token = response.session.access_token
                     
                     # Update cookie with new token
-                    if cookie_manager is not None:
-                        try:
-                            cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                        except Exception:
-                            pass
+                    _save_token_to_cookie(cookie_manager, response.session.access_token)
                     
                     return True
             except Exception:
@@ -130,6 +147,11 @@ def require_authentication():
     
     This function first attempts to restore the session, then checks if the user
     is authenticated. This ensures the session is properly validated before allowing access.
+    
+    Note: This function creates its own CookieManager instance because Streamlit pages
+    loaded via st.navigation() run in separate contexts and don't have access to the
+    cookie_manager initialized in main.py. This is a necessary workaround for
+    Streamlit's architecture.
     """
     # Initialize cookie manager for this page if needed
     try:
@@ -164,12 +186,7 @@ def sign_in(email, password, cookie_manager=None):
             st.session_state.access_token = response.session.access_token
             
             # Save access_token to cookies for persistent login (7-day expiry)
-            if cookie_manager is not None:
-                try:
-                    cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                except Exception:
-                    # Cookie save failed, but login still succeeded
-                    pass
+            _save_token_to_cookie(cookie_manager, response.session.access_token)
         return response
     except Exception as e:
         return {"error": str(e)}
@@ -191,12 +208,7 @@ def sign_up(email, password, cookie_manager=None):
             st.session_state.access_token = response.session.access_token
             
             # Save access_token to cookies for persistent login (7-day expiry)
-            if cookie_manager is not None:
-                try:
-                    cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                except Exception:
-                    # Cookie save failed, but signup still succeeded
-                    pass
+            _save_token_to_cookie(cookie_manager, response.session.access_token)
         return response
     except Exception as e:
         return {"error": str(e)}
