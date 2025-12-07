@@ -58,11 +58,11 @@ def restore_session(cookie_manager=None):
                         st.session_state.user = response.user
                         st.session_state.access_token = supabase_token
                         return True
-                except Exception as e:
+                except Exception:
                     # Token validation failed, cookie might be expired or invalid
                     # Delete the invalid cookie
                     cookie_manager.delete("supabase_token")
-        except Exception as e:
+        except Exception:
             # Cookie manager error, continue to session_state fallback
             pass
     
@@ -95,11 +95,11 @@ def restore_session(cookie_manager=None):
                     if cookie_manager is not None:
                         try:
                             cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                        except:
+                        except Exception:
                             pass
                     
                     return True
-            except Exception as e:
+            except Exception:
                 # Session refresh failed, clear the session
                 st.session_state["session"] = None
                 st.session_state.authenticated = False
@@ -135,7 +135,7 @@ def require_authentication():
     try:
         import extra_streamlit_components as stx
         cookie_manager = stx.CookieManager()
-    except:
+    except Exception:
         cookie_manager = None
     
     # First, try to restore any existing session
@@ -167,7 +167,7 @@ def sign_in(email, password, cookie_manager=None):
             if cookie_manager is not None:
                 try:
                     cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                except Exception as e:
+                except Exception:
                     # Cookie save failed, but login still succeeded
                     pass
         return response
@@ -194,7 +194,7 @@ def sign_up(email, password, cookie_manager=None):
             if cookie_manager is not None:
                 try:
                     cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
-                except Exception as e:
+                except Exception:
                     # Cookie save failed, but signup still succeeded
                     pass
         return response
@@ -212,7 +212,7 @@ def sign_out(cookie_manager=None):
         if cookie_manager is not None:
             try:
                 cookie_manager.delete("supabase_token")
-            except Exception as e:
+            except Exception:
                 pass
         
         # Always clear the session state
