@@ -1,5 +1,6 @@
 import streamlit as st
 from dotenv import load_dotenv
+import extra_streamlit_components as stx
 
 # Load environment variables
 load_dotenv()
@@ -9,6 +10,9 @@ load_dotenv()
 
 # Page Configuration
 st.set_page_config(page_title="Sam - AI Assistant", page_icon="🤖", layout="centered")
+
+# Initialize Cookie Manager (must be done before auth imports)
+cookie_manager = stx.CookieManager()
 
 from app.auth import sign_in, sign_up, sign_out, get_profile, update_profile, restore_session
 
@@ -23,7 +27,7 @@ if "access_token" not in st.session_state:
     st.session_state.access_token = None
 
 # Restore session on every rerun
-restore_session()
+restore_session(cookie_manager)
 
 def login_page_func():
     st.title("Welcome Back")
@@ -37,7 +41,7 @@ def login_page_func():
             submitted = st.form_submit_button("Sign In", type="primary")
             
             if submitted:
-                response = sign_in(email, password)
+                response = sign_in(email, password, cookie_manager)
                 if hasattr(response, "user") and response.user and response.session:
                     # Session and auth state are already set by sign_in()
                     st.rerun()
@@ -53,7 +57,7 @@ def login_page_func():
             submitted = st.form_submit_button("Sign Up")
             
             if submitted:
-                response = sign_up(new_email, new_password)
+                response = sign_up(new_email, new_password, cookie_manager)
                 if hasattr(response, "user") and response.user:
                     if response.session:
                         # Session and auth state are already set by sign_up()
@@ -94,7 +98,7 @@ if st.session_state.authenticated:
         display_name = profile.get("full_name") if profile else st.session_state.user.email
         st.write(f"Hi, {display_name}!")
         if st.button("Sign Out"):
-            sign_out()
+            sign_out(cookie_manager)
             st.rerun()
             
     pg = st.navigation([chat_page])

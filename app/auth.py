@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from supabase import create_client, Client
+from datetime import datetime, timedelta
 
 def init_supabase(access_token: str = None) -> Client:
     url = os.environ.get("SUPABASE_URL")
@@ -17,9 +18,15 @@ def init_supabase(access_token: str = None) -> Client:
         
     return client
 
-def restore_session():
+def restore_session(cookie_manager=None):
     """
-    Restores the authentication state from st.session_state["session"].
+    Restores the authentication state from browser cookies or st.session_state["session"].
+    
+    Priority order:
+    1. Check browser cookies for 'supabase_token'
+    2. If cookie exists, validate with Supabase and restore session
+    3. Fall back to session_state if no cookie
+    
     Refreshes the session if needed to keep it alive.
     Returns True if a valid session exists, False otherwise.
     
@@ -27,6 +34,38 @@ def restore_session():
     in supabase-py >= 2.0. The refresh_session method extends the session lifetime
     by using the refresh_token to obtain new access tokens.
     """
+    # First, try to restore from cookies (persistent storage)
+    if cookie_manager is not None:
+        try:
+            supabase_token = cookie_manager.get(cookie="supabase_token")
+            
+            if supabase_token:
+                # We have a token in cookies, validate it with Supabase
+                try:
+                    supabase = init_supabase()
+                    # Get user info using the token
+                    response = supabase.auth.get_user(supabase_token)
+                    
+                    if response and response.user:
+                        # Token is valid, restore session
+                        st.session_state["session"] = {
+                            "access_token": supabase_token,
+                            "refresh_token": None,  # We only store access token in cookies
+                            "user": response.user
+                        }
+                        st.session_state.authenticated = True
+                        st.session_state.user = response.user
+                        st.session_state.access_token = supabase_token
+                        return True
+                except Exception as e:
+                    # Token validation failed, cookie might be expired or invalid
+                    # Delete the invalid cookie
+                    cookie_manager.delete("supabase_token")
+        except Exception as e:
+            # Cookie manager error, continue to session_state fallback
+            pass
+    
+    # Fall back to session_state restoration
     if "session" not in st.session_state or st.session_state["session"] is None:
         return False
     
@@ -50,6 +89,14 @@ def restore_session():
                     st.session_state.authenticated = True
                     st.session_state.user = response.user
                     st.session_state.access_token = response.session.access_token
+                    
+                    # Update cookie with new token
+                    if cookie_manager is not None:
+                        try:
+                            cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
+                        except:
+                            pass
+                    
                     return True
             except Exception as e:
                 # Session refresh failed, clear the session
@@ -92,7 +139,7 @@ def require_authentication():
         st.info("Please return to the main page to log in.")
         st.stop()
 
-def sign_in(email, password):
+def sign_in(email, password, cookie_manager=None):
     supabase = init_supabase()
     try:
         response = supabase.auth.sign_in_with_password({"email": email, "password": password})
@@ -107,11 +154,19 @@ def sign_in(email, password):
             st.session_state.authenticated = True
             st.session_state.user = response.user
             st.session_state.access_token = response.session.access_token
+            
+            # Save access_token to cookies for persistent login (7-day expiry)
+            if cookie_manager is not None:
+                try:
+                    cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
+                except Exception as e:
+                    # Cookie save failed, but login still succeeded
+                    pass
         return response
     except Exception as e:
         return {"error": str(e)}
 
-def sign_up(email, password):
+def sign_up(email, password, cookie_manager=None):
     supabase = init_supabase()
     try:
         response = supabase.auth.sign_up({"email": email, "password": password})
@@ -126,17 +181,32 @@ def sign_up(email, password):
             st.session_state.authenticated = True
             st.session_state.user = response.user
             st.session_state.access_token = response.session.access_token
+            
+            # Save access_token to cookies for persistent login (7-day expiry)
+            if cookie_manager is not None:
+                try:
+                    cookie_manager.set("supabase_token", response.session.access_token, expires_at=datetime.now() + timedelta(days=7))
+                except Exception as e:
+                    # Cookie save failed, but signup still succeeded
+                    pass
         return response
     except Exception as e:
         return {"error": str(e)}
 
-def sign_out():
+def sign_out(cookie_manager=None):
     supabase = init_supabase()
     try:
         supabase.auth.sign_out()
     except Exception as e:
         pass # Ignore errors on logout
     finally:
+        # Delete the authentication cookie
+        if cookie_manager is not None:
+            try:
+                cookie_manager.delete("supabase_token")
+            except Exception as e:
+                pass
+        
         # Always clear the session state
         st.session_state["session"] = None
         st.session_state.authenticated = False
